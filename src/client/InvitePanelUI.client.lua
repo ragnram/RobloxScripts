@@ -5,7 +5,6 @@ local player = players.LocalPlayer
 
 --// GUI
 local UI = player.PlayerGui:WaitForChild("Main").Invite
-local close = UI.Close
 local sFrame = UI.Frame.ScrollingFrame
 local card = game.ReplicatedStorage.GUI.EntryTemplate
 
@@ -60,10 +59,6 @@ function updatePlayers()
 	end
 end
 
-function closeWindow()
-	UI.Visible = false
-end
-
 function newParty(partyMembers)
 	updatePlayers()
 	for index in partyMembers do
@@ -80,6 +75,5 @@ end
 updatePlayers()
 updateEvent.OnClientEvent:Connect(newParty)
 players.PlayerAdded:Connect(updatePlayers)
-close.Activated:Connect(closeWindow)
 
 return module

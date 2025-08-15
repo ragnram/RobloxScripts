@@ -1,5 +1,4 @@
 --!strict
-
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 
@@ -86,6 +85,11 @@ local function openInventory()
 	end
 end
 
+--// Events
 ui.Shop.Activated:Connect(openShopPanel)
 ui.Invite.Activated:Connect(openInvitePanel)
 ui.Inventory.Activated:Connect(openInventory)
+
+inventory.Exit.Activated:Connect(openInventory)
+invitePanel.Exit.Activated:Connect(openInvitePanel)
+shopPanel.Exit.Activated:Connect(openShopPanel)

@@ -89,8 +89,8 @@ local function update(scale: UIScale)
 				:GetPropertyChangedSignal(monitorInstance:IsA("Camera") and "ViewportSize" or "AbsoluteSize")
 				:Connect(function()
 					for scale in newListener.scales do
-					update(scale)
-				end
+						update(scale)
+					end
 				end),
 		}
 

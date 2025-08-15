@@ -32,8 +32,16 @@ local dot = innerFrame.Options.DisplayFrame.Dot
 local defulatDotPosition = dot.Position
 local mouse = player:GetMouse()
 local selectedGui
-
+local colorSetting = innerFrame.Options
+local clickedOnItem
 --// Local Functions
+
+colorSetting.Visible = false
+local function ResetColorWheel()
+	colorSetting.Visible = false
+	dot.Position = defulatDotPosition
+end
+
 local function OpenDropDown()
 	if dropDownMenu.Visible == true then
 		dropDownMenu.Visible = false
@@ -43,27 +51,38 @@ local function OpenDropDown()
 end
 
 local function ChangeType(self)
-	dropDownMenu.Visible = false
+	ResetColorWheel()
 	filter = self.Name
 end
 
 local function ChangeColour()
+	colorSetting.Visible = true
 	dot.Position = defulatDotPosition
 end
 
 local function OpenTab(itemType)
+	ResetColorWheel()
+	for _, button in container.DefaultScroller.ScrollingFrame:GetChildren() do
+		if button:IsA("GuiButton") then
+			button:Destroy()
+		end
+	end
+
 	content = getInventoryRemoteFunction:InvokeServer()
 
-	print(filter, content)
 	sortModule.sort(filter, content)
 
 	for object in content do
 		if content[object][itemtype] == itemType then
 			local frame = itemFrame:Clone()
 			frame.Parent = container.DefaultScroller.ScrollingFrame
-			frame.ItemRarity.ItemRarity.Text = content[object][rarity]
+			frame.ItemRarity.ItemRarity.Text = content[object][rarity] or ""
 			frame.DisplayImage.Image = content[object][image]
 			frame.ItemName.Text = content[object][name]
+			frame.Activated:Connect(function()
+				clickedOnItem = frame
+				ResetColorWheel()
+			end)
 			frame.DisplayImage.ChangeColor.Activated:Connect(ChangeColour)
 		end
 	end

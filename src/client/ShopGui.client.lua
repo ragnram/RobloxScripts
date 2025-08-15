@@ -92,7 +92,9 @@ local function OpenMountsTab()
 end
 
 local function Close()
-	shopGui.Visible = false
+	repeat
+		task.wait()
+	until shopGui.Visible == false
 	ChangeTab(defaultShop, featuredTab)
 end
 
