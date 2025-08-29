@@ -27,6 +27,7 @@ local BlueTouch: RBXScriptConnection, RedTouch: RBXScriptConnection
 local TouchWaterConnection: RBXScriptConnection
 local BluePoints, RedPoints = 0, 0
 local RedTeam, BlueTeam
+local highlights = {}
 
 --// Local Functions
 local function GetMap()
@@ -50,7 +51,7 @@ local function SetTeams(miniGameData: MiniGameData)
 
 		local teamHighLight = Instance.new("Highlight", character)
 		teamHighLight.FillTransparency = 1
-
+		table.insert(highlights, teamHighLight)
 		if index % 2 == 1 then
 			teamHighLight.OutlineColor = Color3.new(1, 0, 0)
 			table.insert(redTeam, player)
@@ -72,35 +73,42 @@ local function SetUpNets(miniGameData: MiniGameData)
 	local scored = false
 
 	local function InNet(part: BasePart)
-		local function Particels(bool)
-			if part:IsA("BasePart") and part:FindFirstChildOfClass("Attachment") then
-				for _, effect: Instance in part:FindFirstChildOfClass("Attachment"):GetChildren() do
-					if effect:IsA("ParticleEmitter") then
-						effect.Enabled = bool
+		if part.Name == "Ball" then
+			local function Particels(bool)
+				if part:IsA("BasePart") and part:FindFirstChildOfClass("Attachment") then
+					for _, effect: Instance in part:FindFirstChildOfClass("Attachment"):GetChildren() do
+						if effect:IsA("ParticleEmitter") then
+							effect.Enabled = bool
+						end
 					end
 				end
 			end
-		end
 
-		if part.Name == "Ball" and not scored then
-			scored = true
-			Particels(true)
-			task.wait(1)
-			Particels(false)
-			task.wait(0.5)
-			part.Position = BallStartPosition
-			scored = false
+			if not scored then
+				scored = true
+				Particels(true)
+				task.wait(1)
+				Particels(false)
+				task.wait(0.5)
+				part.Position = BallStartPosition
+				scored = false
+			end
+			return true
 		end
+		return false
 	end
-
 	BlueTouch = BlueNet.Touched:Connect(function(part)
-		InNet(part)
-		RedPoints += 1
+		if InNet(part) then
+			RedPoints += 1
+			miniGameData.Map.GoalRed.GuiPart.BillboardGui.TeamGoalFrame.TeamScore.Text = RedPoints
+		end
 	end)
 
 	RedTouch = RedNet.Touched:Connect(function(part)
-		InNet(part)
-		BluePoints += 1
+		if InNet(part) then
+			BluePoints += 1
+			miniGameData.Map.GoalBlue.GuiPart.BillboardGui.TeamGoalFrame.TeamScore.Text = BluePoints
+		end
 	end)
 end
 
@@ -137,14 +145,24 @@ SoccerModule.endRound = function()
 	elseif RedPoints < BluePoints then
 		roundHandlerModule.win(BlueTeam)
 		roundHandlerModule.lose(RedTeam)
+	else
+		roundHandlerModule.lose(RedTeam)
+		roundHandlerModule.lose(BlueTeam)
+		roundHandlerModule.win({})
+	end
+
+	for _, highlight: any in highlights do
+		if highlight:IsA("Highlight") then
+			(highlight :: Highlight):Destroy()
+		end
 	end
 	Workspace.Minigames:ClearAllChildren()
 end
 
-SoccerModule.start = function(playerTable: { Player })
+SoccerModule.Start = function(playerTable: { Player })
 	local self = {
-		Map = GetMap(),
 		PlayerTable = playerTable,
+		Map = GetMap(),
 	} :: MiniGameData
 
 	BluePoints, RedPoints = 0, 0
@@ -155,13 +173,8 @@ SoccerModule.start = function(playerTable: { Player })
 	SetUpBall(self)
 	TouchWaterConnection = SetUpWater()
 
-	roundHandlerModule.startTimer("Bomb Game")
-
-	if #playerTable <= 0 then
-		task.wait(5)
-		--SoccerModule.endRound()
-		return
-	end
+	roundHandlerModule.startTimer("Soccer Game")
+	SoccerModule.endRound()
 end
 
 return SoccerModule

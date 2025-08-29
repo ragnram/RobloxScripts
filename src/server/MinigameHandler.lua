@@ -1,3 +1,6 @@
+-- // Module
+local MiniGameHandler = {}
+
 --// Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -24,10 +27,6 @@ local MiniGames = {
 local lastMinigame
 
 --// Local Functions
-local function PlayerJoinMiniGame(player)
-	table.insert(playersJoiningMiniGame, player)
-end
-
 local function PickMiniGame()
 	while true do
 		local newMiniGame = math.random(1, #MiniGames)
@@ -38,19 +37,25 @@ local function PickMiniGame()
 	end
 end
 
-local function StartMiniGame()
+--// Module Functions
+function MiniGameHandler.StartMiniGame()
 	if #WorkSpace.Minigames:GetChildren() == 0 then
 		playersJoiningMiniGame = {}
-		ReplicatedStorage.Remotes.RemoteEvents.JoinMiniGame:FireAllClients(MiniGames[PickMiniGame()][2])
+		local pickedMinigame = PickMiniGame()
+		ReplicatedStorage.Remotes.RemoteEvents.JoinMiniGame:FireAllClients(MiniGames[pickedMinigame][2])
 		task.wait(17)
-		MiniGames[PickMiniGame()][1].start(playersJoiningMiniGame)
+		if #playersJoiningMiniGame > 1 then
+			MiniGames[pickedMinigame][1].Start(playersJoiningMiniGame)
+		else
+			task.wait(17)
+			MiniGameHandler.StartMiniGame()
+		end
 	end
 end
 
---// Events
-ReplicatedStorage.Remotes.RemoteEvents.JoinMiniGame.OnServerEvent:Connect(PlayerJoinMiniGame)
-WorkSpace.Minigames.ChildRemoved:Connect(StartMiniGame)
+function MiniGameHandler.PlayerJoinMiniGame(player)
+	table.insert(playersJoiningMiniGame, player)
+end
 
---// Calls
-task.wait(1)
-StartMiniGame()
+--// Return Statement
+return MiniGameHandler

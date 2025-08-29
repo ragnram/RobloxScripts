@@ -1,19 +1,16 @@
-local module = {}
-local players = game:GetService("Players")
-local rm = game.ReplicatedStorage.Remotes.RemoteEvents
-local remote = rm.Invite
-local addToPartyRemote = rm.AddToParty
-local remotePartyUpdate = rm.UpdateParty
-local remotekick = rm.kick
-local scriptReady = rm.ScriptsReady
+--// Module \\--
+local InviteModule = {}
+
+--// Services \\--
+local Players = game:GetService("Players")
+
+--// Variable \\--
+local remotes = game.ReplicatedStorage.Remotes.RemoteEvents
+local remotePartyUpdate = remotes.UpdateParty
 local parties = {}
 
-function module.added(char: Player)
-	table.insert(parties, { char })
-	remotePartyUpdate:FireClient(char, { char })
-end
-
-function playerReady(char)
+--// Local Functions
+local function playerReady(char)
 	for i in parties do
 		for player in parties[i] do
 			if parties[i][player] == char then
@@ -23,7 +20,32 @@ function playerReady(char)
 	end
 end
 
-function module.removed(char)
+local function sendInvite(player, send)
+	remotes.Invite:FireClient(players[send], player)
+end
+
+local function addToParty(player, host)
+	local theHost = players[host]
+	InviteModule.removed(player)
+	for number, party in parties do
+		for _, member in party do
+			if theHost == member then
+				table.insert(parties[number], player)
+				for _, v in parties[number] do
+					remotePartyUpdate:FireClient(v, parties[number])
+				end
+			end
+		end
+	end
+end
+
+local function kickPlayer(host, player)
+	InviteModule.removed(player)
+	InviteModule.added(player)
+end
+
+--// Module Functions
+function InviteModule.removed(char)
 	for partyNumber, v in parties do
 		for index, player in v do
 			if player == char then
@@ -40,35 +62,17 @@ function module.removed(char)
 	end
 end
 
-function sendInvite(player, send)
-	remote:FireClient(players[send], player)
+function InviteModule.added(char: Player)
+	table.insert(parties, { char })
+	remotePartyUpdate:FireClient(char, { char })
 end
 
-function addToParty(player, host)
-	local theHost = players[host]
-	module.removed(player)
-	for number, party in parties do
-		for _, member in party do
-			if theHost == member then
-				table.insert(parties[number], player)
-				for _, v in parties[number] do
-					remotePartyUpdate:FireClient(v, parties[number])
-				end
-			end
-		end
-	end
-end
+--// Events
+remotes.kick.OnServerEvent:Connect(kickPlayer)
+remotes.Invite.OnServerEvent:Connect(sendInvite)
+remotes.AddToParty.OnServerEvent:Connect(addToParty)
+remotes.ScriptsReady.OnServerEvent:Connect(playerReady)
+Players.PlayerAdded:Connect(InviteModule.added)
+Players.PlayerRemoving:Connect(InviteModule.removed)
 
-function kickPlayer(host, player)
-	module.removed(player)
-	module.added(player)
-end
-
-remotekick.OnServerEvent:Connect(kickPlayer)
-remote.OnServerEvent:Connect(sendInvite)
-addToPartyRemote.OnServerEvent:Connect(addToParty)
-scriptReady.OnServerEvent:Connect(playerReady)
-players.PlayerAdded:Connect(module.added)
-players.PlayerRemoving:Connect(module.removed)
-
-return module
+return InviteModule

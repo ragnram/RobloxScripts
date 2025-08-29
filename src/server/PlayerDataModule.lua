@@ -6,12 +6,14 @@ local playerDataModule = {}
 --// Services
 local players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --// Varubles
 local money = 1
 local playTime = 2
 local inventory = 3
+local equippedEmotes = 4
 local DataStore = DataStoreService:GetDataStore("PlayerData")
 local playerData = {}
 
@@ -30,12 +32,14 @@ local function formatPlaytime(seconds: number): string
 end
 
 local function StartTimer(player: Player)
-	while playerData[player] do
-		task.wait(1)
+	while playerData[player.UserId] and task.wait(1) do
 		playerData[player.UserId][playTime] += 1
-		((player:WaitForChild("leaderstats") :: Folder):WaitForChild("Play Time") :: StringValue).Value =
-			formatPlaytime(playerData[player.UserId][playTime])
+		player["leaderstats"]["Play Time"].Value = formatPlaytime(playerData[player.UserId][playTime])
 	end
+end
+
+local function UpdatePlayerMoney(player: Player)
+	playerData[player.UserId][money] = player.leaderstats.Money.Value
 end
 
 local function newPlayer(player: Player)
@@ -55,14 +59,17 @@ local function newPlayer(player: Player)
 		return DataStore:GetAsync(player.UserId)
 	end)
 
-	if success and playerTable then
+	if false and success and playerTable then
 		playerData[player.UserId] = playerTable
 	else
-		playerData[player.UserId] = { 0, 0, {} }
+		playerData[player.UserId] = { 0, 0, {}, {} }
 	end
 
 	moneyValue.Value = playerData[player.UserId][money]
 
+	moneyValue.Changed:Connect(function()
+		UpdatePlayerMoney(player)
+	end)
 	StartTimer(player)
 end
 
@@ -102,8 +109,24 @@ local function BuyItem(player: Player, item: Model)
 	return false
 end
 
+local function GiveEquippedEmotes(player)
+	return playerData[player.UserId][equippedEmotes]
+end
+
+local function EquippedEmotes(player, emoteName, removeOrAdd)
+	if removeOrAdd then
+		table.insert(playerData[player.UserId][equippedEmotes], emoteName)
+	else
+		for index in playerData[player.UserId][equippedEmotes] do
+			if playerData[player.UserId][equippedEmotes][index] == emoteName then
+				playerData[player.UserId][equippedEmotes][index] = nil
+			end
+		end
+	end
+end
+
 --// Module Functions
-playerDataModule.removeFromInventory = function(player: Player, item)
+playerDataModule.RemoveFromInventory = function(player: Player, item)
 	for index in playerData[player.UserId][inventory] do
 		if playerData[player.UserId][inventory][index] == item then
 			playerData[player.UserId][inventory][index] = nil
@@ -112,13 +135,14 @@ playerDataModule.removeFromInventory = function(player: Player, item)
 	end
 end
 
-playerDataModule.startServer = function()
+playerDataModule.StartServer = function()
 	players.PlayerAdded:Connect(newPlayer)
 	players.PlayerRemoving:Connect(removedPlayer)
+	ReplicatedStorage.Remotes.RemoteFunction.GetInventory.OnServerInvoke = GiveInventory
+	ReplicatedStorage.Remotes.RemoteFunction.BuyItem.OnServerInvoke = BuyItem
+	ReplicatedStorage.Remotes.RemoteFunction.GiveEquippedEmotes.OnServerInvoke = GiveEquippedEmotes
+	ReplicatedStorage.Remotes.RemoteEvents.EquippedEmotes.OnServerEvent:Connect(EquippedEmotes)
 end
 
---// Events
-ReplicatedStorage.Remotes.RemoteFunction.GetInventory.OnServerInvoke = GiveInventory
-ReplicatedStorage.Remotes.RemoteFunction.BuyItem.OnServerInvoke = BuyItem
-
+--// Return Module
 return playerDataModule

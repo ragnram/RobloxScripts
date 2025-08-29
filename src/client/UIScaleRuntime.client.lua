@@ -121,8 +121,6 @@ local function update(scale: UIScale)
 
 					removeFromList(newScaleInfo.signals, conn)
 					removeFromList(newScaleInfo.text_constraints, obj)
-
-					print(newScaleInfo)
 				end)
 
 				table.insert(newScaleInfo.signals, conn)

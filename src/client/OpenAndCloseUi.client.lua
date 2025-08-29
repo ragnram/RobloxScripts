@@ -6,7 +6,7 @@ local screenGUI = Players.LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("Ma
 local invitePanel = screenGUI:WaitForChild("Invite")
 local shopPanel = screenGUI:WaitForChild("Shop")
 local inventory = screenGUI:WaitForChild("Inventory")
-
+local setting = screenGUI:WaitForChild("Settings")
 local ui = screenGUI:WaitForChild("Sidebar")
 
 -- Tween settings
@@ -19,7 +19,7 @@ local easingIn = Enum.EasingDirection.In
 local inviteVisiblePos = invitePanel.Position
 local shopVisiblePos = shopPanel.Position
 local inventoryPos = inventory.Position
-
+local SettingsPos = setting.Position
 -- Calculate hidden position by offsetting to the left
 local function getHiddenPos(panel)
 	return UDim2.new(-1, 0, panel.Position.Y.Scale, panel.Position.Y.Offset)
@@ -61,6 +61,7 @@ local function openInvitePanel()
 	else
 		close(shopPanel)
 		close(inventory)
+		close(setting)
 		open(invitePanel, inviteVisiblePos)
 	end
 end
@@ -71,6 +72,7 @@ local function openShopPanel()
 	else
 		close(invitePanel)
 		close(inventory)
+		close(setting)
 		open(shopPanel, shopVisiblePos)
 	end
 end
@@ -81,7 +83,18 @@ local function openInventory()
 	else
 		close(invitePanel)
 		close(shopPanel)
+		close(setting)
 		open(inventory, inventoryPos)
+	end
+end
+local function openSettingsPanel()
+	if setting.Visible then
+		close(setting)
+	else
+		close(invitePanel)
+		close(inventory)
+		close(shopPanel)
+		open(setting, SettingsPos)
 	end
 end
 
@@ -89,7 +102,8 @@ end
 ui.Shop.Activated:Connect(openShopPanel)
 ui.Invite.Activated:Connect(openInvitePanel)
 ui.Inventory.Activated:Connect(openInventory)
-
-inventory.Exit.Activated:Connect(openInventory)
+ui.Settings.Activated:Connect(openSettingsPanel)
 invitePanel.Exit.Activated:Connect(openInvitePanel)
 shopPanel.Exit.Activated:Connect(openShopPanel)
+setting.Exit.Activated:Connect(openSettingsPanel)
+inventory.Exit.Activated:Connect(openInventory)

@@ -1,14 +1,13 @@
---
-
+--// Module \\--
 local GamePassModule = {}
 
---// Services
+--// Services \\--
 local MarketplaceService = game:GetService("MarketplaceService")
 
---// Varubles
+--// Varubles \\--
 local pendingPurchases = {}
 
---// Local Functions
+--// Local Functions \\--
 
 local function CompletePerchase(player, _, wasPurchased)
 	if wasPurchased then
@@ -22,7 +21,6 @@ function WaitForPurchase(player)
 
 	local start = tick()
 	while tick() - start < 30 do -- timeout after 30 seconds
-		print(pendingPurchases[userId])
 		if pendingPurchases[userId] == true then
 			pendingPurchases[userId] = nil
 			return true
@@ -49,7 +47,7 @@ local function MakeReceipt(player, gamePassId)
 	end
 end
 
---// Module Functions
+--// Module Functions \\--
 GamePassModule.getGamePass = function(player, gamePassId)
 	MakeReceipt(player, gamePassId)
 
@@ -66,8 +64,9 @@ GamePassModule.getDevProduct = function(player, productId)
 	return WaitForPurchase(player)
 end
 
---// Events
+--// Events \\--
 MarketplaceService.PromptGamePassPurchaseFinished:Connect(CompletePerchase)
 MarketplaceService.PromptProductPurchaseFinished:Connect(CompletePerchase)
 
+--// Return Statement \\--
 return GamePassModule

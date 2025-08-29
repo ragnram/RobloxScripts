@@ -28,13 +28,33 @@ local function ChangeTab(CloseTab, OpenTab)
 	end
 end
 
+local function ChangeButtonStyle(style: string)
+	if style == "owned" then
+		buyButton.TextLabel.Text = "OWNED"
+		buyButton.UIGradient.Enabled = false
+		buyButton.BackgroundColor3 = Color3.new(1, 0.94902, 0)
+	elseif style == "buy" then
+		buyButton.TextLabel.Text = "BUY"
+		buyButton.BackgroundColor3 = buyButtonColor
+		buyButton.UIGradient.Enabled = true
+	elseif style == "fail" then
+		buyButton.TextLabel.TextScaled = true
+		buyButton.TextLabel.Text = "Get More Money"
+		buyButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+		buyButton.UIGradient.Enabled = false
+		task.wait(1)
+		buyButton.TextLabel.TextScaled = false
+		buyButton.TextLabel.Text = "BUY"
+		buyButton.UIGradient.Enabled = true
+		buyButton.BackgroundColor3 = buyButtonColor
+	end
+end
 local function GetItems(folder)
 	for _, Ui in defaultShop.ScrollingFrame:GetChildren() do
 		if Ui:IsA("TextButton") then
 			Ui:Destroy()
 		end
 	end
-
 	local undwartedItems = folder:GetChildren()
 	algorithms.quicksort(undwartedItems, 1, #undwartedItems)
 	for Index, Item: Model in undwartedItems do
@@ -51,17 +71,17 @@ local function GetItems(folder)
 		local display = defaultShop.ItemDisplay
 
 		local function SetDisplay()
-			local model = display.ViewportFrame:FindFirstChildOfClass("Model")
-			if model then
-				model:Destroy()
-			end
+			local invontory = ReplicatedStorage.Remotes.RemoteFunction.GetInventory:InvokeServer()
 			display.ItemName.Text = name
 			display.ItemDescription.Text = description
-			local Object = Item:Clone()
-			Object.Parent = display.ViewportFrame
 			selectedItem = Item
-			buyButton.Text = "BUY"
-			buyButton.BorderColor3 = buyButtonColor
+			ChangeButtonStyle("buy")
+			for index in invontory do
+				if invontory[index][1] == name then
+					ChangeButtonStyle("owned")
+					break
+				end
+			end
 		end
 
 		frame.Activated:Connect(SetDisplay)
@@ -99,15 +119,11 @@ local function Close()
 end
 
 local function BuySelected()
-	if buyButton.Text == "BUY" then
+	if buyButton.TextLabel.Text == "BUY" then
 		if game.ReplicatedStorage.Remotes.RemoteFunction.BuyItem:InvokeServer(selectedItem) then
-			buyButton.Text = "Owned"
+			ChangeButtonStyle("owned")
 		else
-			buyButton.Text = "Get More Money"
-			buyButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-			task.wait(1)
-			buyButton.Text = "BUY"
-			buyButton.BorderColor3 = buyButtonColor
+			ChangeButtonStyle("fail")
 		end
 	end
 end

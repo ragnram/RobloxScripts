@@ -29,6 +29,7 @@ end
 
 --// Module Functions
 RoundHandlerModule.lose = function(players: { Player })
+	print(players)
 	for _, player: Player in players do
 		MovePlayerToStart(player)
 		GivePlayerMoney(player, 50)
@@ -40,12 +41,14 @@ RoundHandlerModule.win = function(players: { Player })
 		MovePlayerToStart(player)
 		GivePlayerMoney(player, 100)
 	end
+	ReplicatedStorage.Remotes.RemoteEvents.StartTimer:FireAllClients()
 	task.wait(3)
 	WorkSpace.Minigames:ClearAllChildren()
 end
 
 RoundHandlerModule.startTimer = function(gameName)
 	startTimerEvent:FireAllClients(gameName)
+	task.wait(60 * 3)
 end
 
 return RoundHandlerModule

@@ -7,7 +7,7 @@ local SlapBattleModule = {}
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Workspace = game:GetService('Workspace')
+local Workspace = game:GetService("Workspace")
 
 --// OtherModules
 local roundHandlerModule = require(ServerScriptService.RoundModule)
@@ -17,17 +17,17 @@ local MiniGameModule = require(ServerScriptService.MiniGameModule)
 type MiniGameData = MiniGameModule.MiniGameData
 
 --// Varubles
-local TouchedWaterConnection : RBXScriptConnection
-local PlayersLeft: {Player}
-
+local TouchedWaterConnection: RBXScriptConnection
+local PlayersLeft: { Player }
+local hitPlayers = {}
 --// Local Functions
 
 local function RemoveSlapTool()
 	local playersTable = Players:GetDescendants()
 	local workspaceTable = workspace:GetDescendants()
-	
-	local function FindSlapTool(Table: {any})
-		for _, instance : Instance in Table do
+
+	local function FindSlapTool(Table: { any })
+		for _, instance: Instance in Table do
 			if instance:IsA("Tool") then
 				local tagTable = instance:GetTags()
 				for _, tag in tagTable do
@@ -38,7 +38,7 @@ local function RemoveSlapTool()
 			end
 		end
 	end
-	
+
 	FindSlapTool(playersTable)
 	FindSlapTool(workspaceTable)
 end
@@ -47,14 +47,14 @@ local function SetUpWater()
 	return Workspace.Water.Touched:Connect(function(part)
 		local character = part:FindFirstAncestorOfClass("Model")
 		local player = Players:GetPlayerFromCharacter(character)
-		if player then
-			roundHandlerModule.lose({player})
-			table.remove(PlayersLeft,table.find(PlayersLeft, player))
+		if player and not hitPlayers[player.UserId] then
+			hitPlayers[player.UserId] = true
+			roundHandlerModule.lose({ player })
+			table.remove(PlayersLeft, table.find(PlayersLeft, player))
 			if #PlayersLeft <= 1 then
 				SlapBattleModule.endRound()
-			end 
+			end
 		end
-		roundHandlerModule.startTimer("Slap Game")
 	end)
 end
 
@@ -64,8 +64,8 @@ local function GetMap()
 	return Map
 end
 
-local function GiveTool(miniGameData : MiniGameData)
-	for _, player : Player in miniGameData.PlayerTable do
+local function GiveTool(miniGameData: MiniGameData)
+	for _, player: Player in miniGameData.PlayerTable do
 		local Tool = ReplicatedStorage.MiniGameTools.SlapTool:Clone()
 		Tool.Parent = player.Backpack
 	end
@@ -79,24 +79,18 @@ SlapBattleModule.endRound = function()
 	Workspace.Minigames:ClearAllChildren()
 end
 
-SlapBattleModule.start = function(playerTable : {Player})
+SlapBattleModule.Start = function(playerTable: { Player })
 	local self = {
 		PlayerTable = playerTable,
-		Map = GetMap()
+		Map = GetMap(),
 	} :: MiniGameData
-
+	hitPlayers = {}
 	PlayersLeft = playerTable
-	MiniGameModule.MovePlayers(self,30)
+	MiniGameModule.MovePlayers(self, 30)
 	TouchedWaterConnection = SetUpWater()
 	GiveTool(self)
 
-	if #playerTable <= 0 then
-		task.wait(5)
-		SlapBattleModule.endRound()
-		return
-	end
+	roundHandlerModule.startTimer("Slap Game")
 end
-
-
 
 return SlapBattleModule

@@ -60,7 +60,7 @@ end
 
 local function Limted(array)
 	for index in array do
-		if array[index][8] == false then
+		if not array[index][8] then
 			table.remove(array, index)
 		end
 	end
@@ -75,7 +75,6 @@ sortModule.sort = function(typeOfSort, theTable)
 	elseif typeOfSort == "Limted" then
 		Limted(theTable)
 	end
-	LowToHightPrice(theTable)
 end
 
 return sortModule
