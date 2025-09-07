@@ -8,6 +8,7 @@ local shopPanel = screenGUI:WaitForChild("Shop")
 local inventory = screenGUI:WaitForChild("Inventory")
 local setting = screenGUI:WaitForChild("Settings")
 local ui = screenGUI:WaitForChild("Sidebar")
+local wheel = screenGUI:WaitForChild("EmoteWheel")
 
 -- Tween settings
 local slideTime = 0.3
@@ -59,6 +60,7 @@ local function openInvitePanel()
 	if invitePanel.Visible then
 		close(invitePanel)
 	else
+		wheel.Visible = false
 		close(shopPanel)
 		close(inventory)
 		close(setting)
@@ -70,6 +72,7 @@ local function openShopPanel()
 	if shopPanel.Visible then
 		close(shopPanel)
 	else
+		wheel.Visible = false
 		close(invitePanel)
 		close(inventory)
 		close(setting)
@@ -81,6 +84,7 @@ local function openInventory()
 	if inventory.Visible then
 		close(inventory)
 	else
+		wheel.Visible = false
 		close(invitePanel)
 		close(shopPanel)
 		close(setting)
@@ -91,6 +95,7 @@ local function openSettingsPanel()
 	if setting.Visible then
 		close(setting)
 	else
+		wheel.Visible = false
 		close(invitePanel)
 		close(inventory)
 		close(shopPanel)
