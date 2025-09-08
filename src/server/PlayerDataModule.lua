@@ -59,7 +59,7 @@ local function newPlayer(player: Player)
 		return DataStore:GetAsync(player.UserId)
 	end)
 
-	if false and success and playerTable then
+	if success and playerTable then
 		playerData[player.UserId] = playerTable
 	else
 		playerData[player.UserId] = { 0, 0, {}, {} }

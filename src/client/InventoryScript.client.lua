@@ -42,6 +42,7 @@ local equipEmotes = inventoryGui.EquipEmotes
 local equipButton = defauleDisplay.Equip
 local questButton = defauleDisplay.Quests
 local lastTab
+local itemEquipped = {}
 --// Local Functions
 
 local function SetEquipButtonToEquip()
@@ -93,13 +94,21 @@ local function ChangeColour()
 end
 
 local function SetDeafultDisplay(frameObject)
-	selectedGui = frameObject
-	defauleDisplay.Visible = true
-	defauleDisplay.ItemDescription.Text = frameObject[description]
-	defauleDisplay.ItemName.Text = frameObject[name]
+	if lastTab == "Emotes" then
+		selectedGui = frameObject
+		defauleDisplay.Visible = true
+		defauleDisplay.ItemDescription.Text = frameObject[description]
+		defauleDisplay.ItemName.Text = frameObject[name]
 
-	SetEquipButtonToEquip()
-	IsEmptySlote()
+		SetEquipButtonToEquip()
+		IsEmptySlote()
+	else
+		if itemEquipped[frameObject[name]] then
+			SetEquipButtonToEquipped()
+		else
+			SetEquipButtonToEquip()
+		end
+	end
 end
 
 local function OpenTab(itemType)
@@ -266,12 +275,17 @@ end
 local function RemoveEquiptedEmote(frame)
 	frame.Visible = false
 	if selectedGui[name] == frame.Background.EmoteName.Text then
+		itemEquipped[lastTab] = frame.Background.EmoteName.Text
 		SetEquipButtonToEquip()
 	end
 	ReplicatedStorage.Remotes.RemoteEvents.EquippedEmotes:FireServer(frame.Background.EmoteName.Text, false)
 end
 
 local function EquipEmote()
+	if lastTab ~= "Emotes" then
+		SetEquipButtonToEquipped()
+		return
+	end
 	equipEmotes.Visible = true
 	local freeSpace = IsEmptySlote()
 	if freeSpace then
